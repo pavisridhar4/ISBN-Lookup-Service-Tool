@@ -1,65 +1,41 @@
 import static org.junit.Assert.*;
 import org.junit.Test;
-import java.io.IOException;
+import java.util.HashMap;
 
-public class LibraryLookupServiceTest {
+public class LibrarySystemTest {
 
     /**
-     * Verifies that the class correctly implements the ISBNLookupService interface.
-     * This ensures the system maintains a decoupled architecture.
+     * Verifies that the system can successfully map an ISBN string to a Book object.
+     * Confirms that both the key (ISBN) and the value (Book data) are stored accurately.
      */
     @Test
-    public void testInterfaceImplementation() throws IOException {
-        ISBNLookupService service = new LibraryLookupService();
-        String title = service.lookup("9780141439518");
-        assertNotNull("The interface method must return a value", title);
+    public void testAddBookToCollection() {
+
+        HashMap<String, Book> collection = new HashMap<>();
+        Book newBook = new Book("9781668208816", "The Long Walk");
+
+        collection.put(newBook.getIsbn(), newBook);
+
+        assertTrue("Collection should contain the ISBN key", collection.containsKey("9781668208816"));
+        assertEquals("Title should match", "The Long Walk", collection.get("9781668208816").getTitle());
     }
 
     /**
-     * Tests a valid, successful API lookup.
-     * Verifies that the service can fetch and parse a real-world book title (Famous Five).
+     * Tests the behavior of object references within the collection.
+     * Verifies that updating a Book object retrieved from the Map correctly
+     * updates the data stored in the collection without needing a re-insert.
      */
     @Test
-    public void testLookupReturnsString() throws IOException {
-        LibraryLookupService service = new LibraryLookupService();
-        // Testing a known valid ISBN - this is for the book Famous Five
-        String result = service.lookup("9780340670729");
-        assertNotNull("Lookup should not return null", result);
-    }
+    public void testUpdateExistingBookData() {
+        HashMap<String, Book> collection = new HashMap<>();
+        Book myBook = new Book("9781668208816", "The Long Walk");
+        collection.put("9781668208816", myBook);
 
-    /**
-     * Edge Case: Ensures that an empty ISBN string does not crash the system
-     * and instead returns the standardized "Unknown" value.
-     */
-    @Test
-    public void testLookupEmptyIsbn() throws IOException {
-        LibraryLookupService service = new LibraryLookupService();
-        // Edge Case: Instance if the ISBN string is empty?
-        String result = service.lookup("");
-        assertEquals("Unknown", result);
-    }
+        // Action: Retrieve and update the location
+        Book retrievedBook = collection.get("9781668208816");
+        retrievedBook.setLocation("Chermside Library, Level 2");
 
-    /**
-     * Edge Case: Validates the robustness of the Regex parsing.
-     * Ensuring non-numeric or malformed ISBN strings are handled gracefully.
-     */
-    @Test
-    public void testLookupInvalidCharacters() throws IOException {
-        LibraryLookupService service = new LibraryLookupService();
-        // Edge Case: ISBN containing non-numeric characters
-        String result = service.lookup("ABC-123-HELP");
-        assertEquals("Unknown", result);
-    }
-
-    /**
-     * Edge Case: Verifies that passing a null reference is handled via
-     * null-safe checks rather than allowing a NullPointerException.
-     */
-    @Test
-    public void testLookupNullIsbn() throws IOException {
-        LibraryLookupService service = new LibraryLookupService();
-        // Edge Case: Passing a null reference
-        String result = service.lookup(null);
-        assertEquals("Unknown", result);
+        // Verification: The book inside the HashMap should reflect the change
+        assertEquals("Chermside Library, Level 2", collection.get("9781668208816").getLocation());
     }
 }

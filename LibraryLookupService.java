@@ -1,93 +1,58 @@
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.net.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Represents a book in the library collection.
- * Maintains the book's identity, physical location, and scan history.
+ * An implementation of the {@link ISBNLookupService} that retrieves book information
+ * from the Open Library Web API.
+ * <p>
  */
-public class Book {
-    private final String isbn;
-    private final String title;
-    private String location;
-    private final List<LocalDateTime> scanHistory;
+public class LibraryLookupService implements ISBNLookupService {
+
+    /** The base URL for the Open Library API request. */
+    private static final String BASE_URL = "https://openlibrary.org/api/books?bibkeys=ISBN:%s&jscmd=details&format=json";
 
     /**
-     * Constructs a new Book instance and records the initial scan timestamp.
+     * Finds the title of a book given its ISBN by querying an external web service.
+     * <p>
+     * If the ISBN is null, empty, or the book cannot be found in the external database,
+     * the method returns "Unknown" rather than throwing an exception to ensure
+     * system stability during UI operations.
      *
-     * @param isbn  the unique 13-digit identifier for the book; must not be null.
-     * @param title the descriptive name of the book; must not be null.
-     * @throws IllegalArgumentException if either isbn or title is null.
-     */
-
-    public Book(String isbn, String title) {
-        if (isbn == null || title == null) {
-            throw new IllegalArgumentException("ISBN and Title cannot be null");
-        }
-
-        this.isbn = isbn;
-        this.title = title;
-        this.location = "Default";
-        this.scanHistory = new ArrayList<>();
-        recordScan();
-
-    }
-
-    /**
-     * Records a new scan event by adding the current system time to the history.
-     * */
-    public void recordScan() {
-        this.scanHistory.add(LocalDateTime.now());
-    }
-
-    /**
-     * Updates the physical storage location of the book.
-     *
-     * @param location the new library or level identifier for the book.
-     */
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    /**
-     * @return the book's unique ISBN string.
-     */
-    public String getIsbn() {
-        return isbn;
-    }
-
-    /**
-     * @return the title of the book.
-     */
-    public String getTitle() {
-        return title;
-    }
-
-    /**
-     * @return the current physical location of the book.
-     */
-    public String getLocation() {
-        return location;
-    }
-
-    /**
-     * Retrieves the history of all recorded scans for this book.
-     *
-     * @return a list of LocalDateTime objects representing each scan event.
-     */
-    public List<LocalDateTime> getScanHistory() {
-        return this.scanHistory;
-    }
-
-    /**
-     * Returns a string representation of the book's current status.
-     *
-     * @return a formatted string containing ISBN, title, location, and scan count.
+     * @param isbn the ISBN string of the book to look up.
+     * @return the title of the book as a String, or "Unknown" if not found or invalid.
+     * @throws IOException if an error occurs during the network connection or
+     * reading the API response.
      */
     @Override
-    public String toString() {
-        return String.format("ISBN: %s | Title: %s | Location: %s | Scans: %d",
-                isbn, title, location, scanHistory.size());
-    }
+    public String lookup(String isbn) throws IOException {
+        if (isbn == null || isbn.isEmpty()) {
+            return "Unknown";
+        }
 
+        URL url = URI.create(String.format(BASE_URL, isbn)).toURL();
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+            String content = br.readLine();
+
+            // Check if the stream returned no data
+            if (content == null) {
+                return "Unknown";
+            }
+
+            // Define regex pattern to extract the title
+            Pattern pattern = Pattern.compile("\"title\": \"(.*?)\"");
+            Matcher matcher = pattern.matcher(content);
+
+            if (matcher.find()) {
+                // Return the first captured group (the actual title)
+                return matcher.group(1);
+            }
+        }
+        // Default fallback if the title pattern was not matched
+        return "Unknown";
+    }
 }
