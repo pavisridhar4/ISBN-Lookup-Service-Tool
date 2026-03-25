@@ -1,0 +1,18 @@
+AI Usage Declaration
+
+Student Number: 48031994
+Course: CSSE2002
+
+1. Tools Used:
+- Gemini (Google)
+
+2. Tasks Assisted:
+- JUnit Testing: Brainstormed edge cases for Book and LibraryLookupService, specifically for null-protection and network error handling.
+- Error Handling: Implemented defensive programming logic (IllegalArgumentException) in the Book constructor and "Unknown" return values in the Lookup Service.
+- Documentation: Used AI to verify that my Javadoc tags (@param, @return, @throws) aligned with professional Java conventions.
+- Refactoring: Assisted in ensuring proper encapsulation (private fields) and verifying that the LibraryLookupService correctly implemented the provided interface.
+
+3. Human Contribution:
+I manually integrated all suggestions into my project, verified the logic against the assignment's specific requirements,
+and ensured all JUnit tests passed in the local IntelliJ environment. I also wrote the core logic for the search functionality
+and collection persistence. I independently designed and implemented the core logic.
